@@ -2,6 +2,7 @@ using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Reflection;
 using System.Text;
 using iTextSharp.text;
 using iTextSharp.text.pdf;
@@ -26,6 +27,10 @@ namespace iTextPdfTest
             encodingProvider = System.Text.CodePagesEncodingProvider.Instance;
             Encoding.RegisterProvider(encodingProvider);
 
+            // リソース取得
+            Assembly assembly = Assembly.GetExecutingAssembly();
+            Stream fontStream = assembly.GetManifestResourceStream("iTextSharpFunction.MS Gothic.ttf");
+
             // A4横でドキュメントを作成
             var doc = new Document(PageSize.A4.Rotate());
             var ms = new MemoryStream();
@@ -37,8 +42,8 @@ namespace iTextPdfTest
             doc.Open();
 
             var pdfContentByte = pw.DirectContent;
-            //var bf = BaseFont.CreateFont(BaseFont.TIMES_BOLD, BaseFont.WINANSI, BaseFont.EMBEDDED);
-            var bf = BaseFont.CreateFont(@"MS Gothic.ttf", BaseFont.IDENTITY_H, BaseFont.NOT_EMBEDDED);
+            //var bf = BaseFont.CreateFont(@"MS Gothic.ttf", BaseFont.IDENTITY_H, BaseFont.NOT_EMBEDDED);
+            var bf = BaseFont.CreateFont(@"MS Gothic.ttf", BaseFont.IDENTITY_H, BaseFont.EMBEDDED, true, GetStreamToBytes(fontStream), null);
 
             // ベースフォントとフォントサイズを指定する。
             pdfContentByte.SetFontAndSize(bf, 10);
@@ -75,7 +80,7 @@ namespace iTextPdfTest
 
         [FunctionName("TestPdfOutputOverwrite")]
         public HttpResponseMessage TestPdfOutputOverwrite(
-            [HttpTrigger(AuthorizationLevel.Function, "get", Route = "test_output_pdf")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Function, "get", Route = "test_output_pdf/overwrite")] HttpRequest req,
             ILogger log
         )
         {
@@ -83,8 +88,14 @@ namespace iTextPdfTest
             encodingProvider = CodePagesEncodingProvider.Instance;
             Encoding.RegisterProvider(encodingProvider);
 
+            // リソース取得
+            Assembly assembly = Assembly.GetExecutingAssembly();            
+            Stream pdfStream = assembly.GetManifestResourceStream("iTextSharpFunction.Google.pdf");
+            Stream fontStream = assembly.GetManifestResourceStream("iTextSharpFunction.MS Gothic.ttf");
+
             // 取得したPDFのサイズでDocument作成
-            var reader = new PdfReader(@"Google.pdf");
+            //var reader = new PdfReader(@"Google.pdf");
+            var reader = new PdfReader(pdfStream);
             var doc = new Document(reader.GetPageSize(1));
             var ms = new MemoryStream();
 
@@ -101,7 +112,8 @@ namespace iTextPdfTest
             var page = pw.GetImportedPage(reader, 1);
             pdfContentByte.AddTemplate(page, 1f, 0, 0, 1f, 0, 0);
 
-            var bf = BaseFont.CreateFont(@"MS Gothic.ttf", BaseFont.IDENTITY_H, BaseFont.NOT_EMBEDDED);
+            //var bf = BaseFont.CreateFont(@"MS Gothic.ttf", BaseFont.IDENTITY_H, BaseFont.NOT_EMBEDDED);
+            var bf = BaseFont.CreateFont(@"MS Gothic.ttf", BaseFont.IDENTITY_H, BaseFont.EMBEDDED, true, GetStreamToBytes(fontStream), null);
 
             // ベースフォントとフォントサイズを指定する。
             pdfContentByte.SetFontAndSize(bf, 10);
@@ -142,6 +154,19 @@ namespace iTextPdfTest
             pdfContentByte.MoveTo(fromX, fromY);
             pdfContentByte.LineTo(toX, toY);
             pdfContentByte.ClosePathStroke();
+        }
+
+
+        private static byte[] GetStreamToBytes(Stream input)
+        {
+            byte[] buffer = new byte[input.Length * 2];
+            var ms = new MemoryStream();
+            int read;
+            while ((read = input.Read(buffer, 0, buffer.Length)) > 0)
+            {
+                ms.Write(buffer, 0, read);
+            }
+            return ms.ToArray();
         }
     }
 }

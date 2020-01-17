@@ -8,6 +8,10 @@
     <PackageReference Include="iTextSharp" Version="5.5.13.1" />
   </ItemGroup>
   <ItemGroup>
+    <None Remove="Google.pdf" />
+    <None Remove="MS Gothic.ttf" />
+  </ItemGroup>
+  <ItemGroup>
     <None Update="host.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -15,11 +19,13 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>Never</CopyToPublishDirectory>
     </None>
-    <None Update="MS Gothic.ttf">
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Google.pdf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Google.pdf">
+    </EmbeddedResource>
+    <EmbeddedResource Include="MS Gothic.ttf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
+    </EmbeddedResource>
   </ItemGroup>
 </Project>
